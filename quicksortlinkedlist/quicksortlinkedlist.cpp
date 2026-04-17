@@ -1,6 +1,9 @@
 #include <iostream>
 using namespace std; 
 
+
+
+
 // nodo de la lista doble
 class Node {
 public:
@@ -21,9 +24,42 @@ public:
     }
 };
 
+
+class Stack {
+    private:
+    Node* top;
+    public:
+    Stack() {
+        
+        // initially stack is empty
+        top = NULL;   
+    }
+
+    void push(int x) {
+        Node* temp = new Node(x);
+        temp->next = top;
+        top = temp;
+    }
+
+    int pop() {
+        if (top == NULL) {
+            cout << "Stack Underflow" << endl;
+            return -1;
+        }
+        Node* temp = top;
+        top = top->next;
+        int val = temp->value;
+
+        delete temp;
+        return val;
+    }
+};
+
+
+
 // clase de lista doblemente ligada
 class DoublyLinkedList {
-private:
+    private:
     // primer nodo de la lista
     Node* head;
     // ultimo nodo de la lista
@@ -31,7 +67,7 @@ private:
     // cantidad de elementos
     int size;
 
-public:
+    public:
     // constructor de la lista
     DoublyLinkedList() : head(nullptr), tail(nullptr), size(0) {}
 
@@ -268,11 +304,62 @@ public:
     }
 };
 
-// funcion para swap los valores en los nodos
-void swap(Node* a, Node* b) {
+
+
+
+
+
+
+// Function to partition the list and find pivot
+Node* partition(Node* low, Node* high) {
+    // Set pivot to the high node
+    int pivot = high->value;
+
+    // Pointer to place smaller elements
+    Node* i = low->prev;
+
+    // Traverse the list to rearrange nodes
+    for (Node* j = low; j != high; j = j->next) {
+        
+        // If current node's value is less than or 
+        // equal to the pivot
+        if (j->value <= pivot) {
+            
+            // Move i forward and swap with j
+            i = (i == nullptr) ? low : i->next;
+            swap(i, j);
+        }
+    }
+
+    // Move i to the correct pivot position
+    i = (i == nullptr) ? low : i->next;
   
-    // swaps valores de los nodos
-    int temp = a->value;
-    a->value = b->value;
-    b->value = temp;
+    // Swap pivot with i's value
+    swap(i, high);
+
+    return i;
+}
+
+
+
+
+
+
+// Recursive function to apply quicksort
+void quickSort(Node* low, Node* high) {
+  
+    // Base case: if the list has one element or 
+    // invalid range
+    if (low != nullptr && high != nullptr 
+        && low != high && low != high->next) {
+      
+        // Find the partition node (pivot)
+        Node* pivot = partition(low, high);
+
+        // Recursively sort the left half
+        quickSort(low, pivot->prev);
+
+        // Recursively sort the right half
+        quickSort(pivot->next, high);
+    }
 }
