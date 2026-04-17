@@ -25,22 +25,31 @@ public:
 };
 
 
+// Stack implementation using linked list
 class Stack {
-    private:
     Node* top;
-    public:
+    
+    // To Store current size of stack
+    int count;
+    
+public:
     Stack() {
         
         // initially stack is empty
-        top = NULL;   
+        top = NULL;
+        count = 0;
     }
 
+    // push operation
     void push(int x) {
         Node* temp = new Node(x);
         temp->next = top;
         top = temp;
+        
+        count++;
     }
 
+    // pop operation
     int pop() {
         if (top == NULL) {
             cout << "Stack Underflow" << endl;
@@ -49,12 +58,31 @@ class Stack {
         Node* temp = top;
         top = top->next;
         int val = temp->value;
-
+        
+        count--;
         delete temp;
         return val;
     }
-};
 
+    // peek operation
+    int peek() {
+        if (top == NULL) {
+            cout << "Stack is Empty" << endl;
+            return -1;
+        }
+        return top->value;
+    }
+
+    // check if stack is empty
+    bool isEmpty() {
+        return top == NULL;
+    }
+
+    // size of stack
+    int size() {
+        return count;
+    }
+};
 
 
 // clase de lista doblemente ligada
