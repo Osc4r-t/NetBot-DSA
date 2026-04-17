@@ -5,15 +5,15 @@
 #include <string>
 using namespace std;
 
-class DoubleNode {
+class Node {
 public:
     LogEntry value;
-    DoubleNode* next;
-    DoubleNode* prev;
+    Node* next;
+    Node* prev;
 
-    DoubleNode(const LogEntry& _value) : value(_value), next(nullptr), prev(nullptr) {}
+    Node(const LogEntry& _value) : value(_value), next(nullptr), prev(nullptr) {}
 
-    ~DoubleNode() {
+    ~Node() {
         next = nullptr;
         prev = nullptr;
     }
@@ -21,17 +21,17 @@ public:
 
 class DoublyLinkedList {
 private:
-    DoubleNode* head;
-    DoubleNode* tail;
+    Node* head;
+    Node* tail;
     int size;
 
 public:
     DoublyLinkedList() : head(nullptr), tail(nullptr), size(0) {}
 
     ~DoublyLinkedList() {
-        DoubleNode* current = head;
+        Node* current = head;
         while (current != nullptr) {
-            DoubleNode* nextNode = current->next;
+            Node* nextNode = current->next;
             delete current;
             current = nextNode;
         }
@@ -41,7 +41,7 @@ public:
     }
 
     void insertFirst(const LogEntry& value) {
-        DoubleNode* auxNode = new DoubleNode(value);
+        Node* auxNode = new Node(value);
 
         if (head == nullptr) {
             head = auxNode;
@@ -60,7 +60,7 @@ public:
             return;
         }
 
-        DoubleNode* auxNode = new DoubleNode(value);
+        Node* auxNode = new Node(value);
         auxNode->prev = tail;
         tail->next = auxNode;
         tail = auxNode;
@@ -85,14 +85,14 @@ public:
             return;
         }
 
-        DoubleNode* current = head;
+        Node* current = head;
         int i = 0;
         while (i < index) {
             current = current->next;
             i++;
         }
 
-        DoubleNode* auxNode = new DoubleNode(value);
+        Node* auxNode = new Node(value);
         auxNode->next = current;
         auxNode->prev = current->prev;
         current->prev->next = auxNode;
@@ -110,7 +110,7 @@ public:
             return;
         }
 
-        DoubleNode* auxNode = head;
+        Node* auxNode = head;
 
         if (head == tail) {
             head = nullptr;
@@ -138,7 +138,7 @@ public:
             cout << "Deleting last node." << endl;
         }
 
-        DoubleNode* auxNode = tail;
+        Node* auxNode = tail;
         tail = tail->prev;
         tail->next = nullptr;
         delete auxNode;
@@ -163,7 +163,7 @@ public:
             return;
         }
 
-        DoubleNode* current = head;
+        Node* current = head;
         int i = 0;
         while (i < index) {
             current = current->next;
@@ -181,7 +181,7 @@ public:
     }
 
     bool find(const LogEntry& value) {
-        DoubleNode* current = head;
+        Node* current = head;
         while (current != nullptr) {
             if (current->value == value) {
                 return true;
@@ -197,7 +197,7 @@ public:
             return LogEntry();
         }
 
-        DoubleNode* current = head;
+        Node* current = head;
         int i = 0;
         while (i < index) {
             current = current->next;
@@ -213,7 +213,7 @@ public:
             return;
         }
 
-        DoubleNode* current = head;
+        Node* current = head;
         int i = 0;
         while (i < index) {
             current = current->next;
@@ -232,7 +232,7 @@ public:
     }
 
     void printForward() {
-        DoubleNode* current = head;
+        Node* current = head;
         while (current != nullptr) {
             cout << current->value << endl;
             current = current->next;
@@ -240,7 +240,7 @@ public:
     }
 
     void printBackward() {
-        DoubleNode* current = tail;
+        Node* current = tail;
         while (current != nullptr) {
             cout << current->value << endl;
             current = current->prev;
