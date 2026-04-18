@@ -310,6 +310,7 @@ class DoublyLinkedList {
 
     // imprime la lista de inicio a fin
     void printForward() {
+
         Node* current = head;
         while (current != nullptr) {
             cout << current->value << " -> " << endl;
@@ -566,59 +567,90 @@ void loadLogEntryData(const string& filename, DoublyLinkedList& list, int n = 50
     file.close();
 }
 
+// convierte una ip en string a entero
+int ipToInt(const string& ip) {
+    stringstream ss(ip);
+    string ip1, ip2, ip3, ip4;
 
-// void loadLogEntryData(const string& filename, LogEntry** out, int capacity, int &loaded) {
-//     ifstream file(filename);
-//     string line;
-//     int i = 0;
+    getline(ss, ip1, '.');
+    getline(ss, ip2, '.');
+    getline(ss, ip3, '.');
+    getline(ss, ip4, '.');
 
-//     while (i < capacity && getline(file, line)){
-//         stringstream ss(line);
-//         string s, min, hr, day, month, ip, port, reason;
+    return stoi(ip1) * 255 * 255 * 255 + stoi(ip2) * 255 * 255 + stoi(ip3) * 255 + stoi(ip4);
+}
 
-//         // obtiene cada elemento del log
-//         getline(ss, month,' ');
-//         getline(ss, day,' ');
-//         getline(ss, hr, ':');
-//         getline(ss, min, ':');
-//         getline(ss, s,' ');
-//         getline(ss, ip, ':');
-//         getline(ss, port,' ');
-//         getline(ss, reason);
+// imprime los registros dentro de un rango de ips
+void printIPRange(DoublyLinkedList* list, int initialIP, int finalIP) {
+    Node* current = list->getHead();
 
-//         // convierte strings a numeros
-//         int _s   = stoi(s);
-//         int _min = stoi(min);
-//         int _hr  = stoi(hr);
-//         int _day = stoi(day);
-//         int _month = monthToInt(month);
-//         int _port = stoi(port);
+    while (current != nullptr) {
+        if (current->value.getIp() >= initialIP && current->value.getIp() <= finalIP) {
+            cout << current->value << endl;
+        }
+        current = current->next;
+    }
+}
 
-//         // crea y guarda puntero
-//         out[i] = new LogEntry(_s,_min,_hr,_day,_month,_port,ip,reason);
-//         ++i;
-//     }
+// guarda una lista en un archivo de texto
+void saveToFile(DoublyLinkedList* list, const string& filename) {
+    ofstream file(filename);
+    Node* current = list->getHead();
 
-//     file.close();
-//     loaded = i;
+    while (current != nullptr) {
+        file << current->value << endl;
+        current = current->next;
+    }
 
-//     // inicializa el resto a nullptr
-//     for (int j = loaded; j < capacity; ++j) out[j] = nullptr;
-// }
+    file.close();
+}
+
+
+
 
 int main(){
+    // cantidad maxima de registros a cargar del archivo
+    const int n = 2846;
+    // ip inicial y final para buscar en la lista
+    string initialIPString, finalIPString;
+    int initialIP, finalIP;
 
-    const int n = 2846;       // capacidad
+    // lista doblemente ligada donde se guardaran los logs
     DoublyLinkedList logsList;
 
-    loadLogEntryData("bitacora_noviembre.txt", logsList, 10);
+    // loadLogEntryData usa una referencia, por eso se pasa la lista directamente
+    // porque la funcion modifica la lista original sin hacer una copia
+    loadLogEntryData("bitacora_noviembre.txt", logsList, n);
 
-    logsList.printForward();
+    // imprime la lista original en el orden en que fue leida
+    // logsList.printForward();
 
+    // quickSortStack usa un puntero, por eso se pasa la direccion de la lista
+    // porque la funcion espera la ubicacion de la lista en memoria
     DoublyLinkedList* sortedList = quickSortStack(&logsList);
 
-    sortedList->printForward();
+    // solicita al usuario la ip inicial del rango
+    cout << "Ingresa la IP inicial: ";
+    cin >> initialIPString;
 
+    // solicita al usuario la ip final del rango
+    cout << "Ingresa la IP final: ";
+    cin >> finalIPString;
+
+    // convierte las ips del usuario a enteros para compararlas
+    initialIP = ipToInt(initialIPString);
+    finalIP = ipToInt(finalIPString);
+
+    // acomoda el rango si el usuario lo dio al reves
+    if (initialIP > finalIP) {
+        swap(initialIP, finalIP);
+    }
+
+    // imprime los registros que estan dentro del rango dado
+    printIPRange(sortedList, initialIP, finalIP);
+
+    // guarda el resultado del ordenamiento en un archivo
+    saveToFile(sortedList, "resultado.txt");
 
     return 0;
 }
