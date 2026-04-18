@@ -1,6 +1,6 @@
 #include <iostream>
 using namespace std; 
-
+#include <random>
 
 
 
@@ -79,7 +79,7 @@ public:
     }
 
     // size of stack
-    int size() {
+    int getSize() {
         return count;
     }
 };
@@ -317,24 +317,31 @@ class DoublyLinkedList {
     void printForward() {
         Node* current = head;
         while (current != nullptr) {
-            cout << current->value << endl;
+            cout << current->value << " -> ";
             current = current->next;
         }
+        cout << "null" << endl;
     }
 
     // imprime la lista de fin a inicio
     void printBackward() {
         Node* current = tail;
         while (current != nullptr) {
-            cout << current->value << endl;
+            cout << current->value << " -> ";
             current = current->prev;
         }
+        cout << "null" << endl;
     }
+
+    Node* getHead() {
+        return head;
+    }
+
+    Node* getTail() {
+        return tail;
+    }
+
 };
-
-
-
-
 
 
 
@@ -368,26 +375,136 @@ Node* partition(Node* low, Node* high) {
     return i;
 }
 
+// funcion auxiliar para convertir pilas a DLL's
+DoublyLinkedList* stackToDLL(Stack* stack){
+    DoublyLinkedList* list = new DoublyLinkedList();
+    while(!stack->isEmpty()){
+        int value = stack->pop();
+        list->insertLast(value);
+    }
+    return list;
+}
 
+DoublyLinkedList* joinDLL(DoublyLinkedList* list1, DoublyLinkedList* list2, DoublyLinkedList* list3) {
+    DoublyLinkedList* list = new DoublyLinkedList();
+    Node* current = nullptr;
+
+    // copy list1
+    if (list1 != nullptr) {
+        current = list1->getHead();
+        while (current != nullptr) {
+            list->insertLast(current->value);
+            current = current->next;
+        }
+    }
+
+    // copy list2
+    if (list2 != nullptr) {
+        current = list2->getHead();
+        while (current != nullptr) {
+            list->insertLast(current->value);
+            current = current->next;
+        }
+    }
+
+    // copy list3
+    if (list3 != nullptr) {
+        current = list3->getHead();
+        while (current != nullptr) {
+            list->insertLast(current->value);
+            current = current->next;
+        }
+    }
+
+    return list;
+}
 
 
 
 
 // Recursive function to apply quicksort
-void quickSort(Node* low, Node* high) {
+DoublyLinkedList* quickSortStack(DoublyLinkedList* list) {
   
-    // Base case: if the list has one element or 
-    // invalid range
+    // definir cabeza y cola de la lista
+    Node* low = list->getHead();
+    Node* high = list->getTail();
+    // solo ordenar si:
+    // la cabeza no es null, 
+    // la cola no es null, 
+    // cola y cabeza no son iguales 
+    // y cabeza es diferente del siguiente a la cola
     if (low != nullptr && high != nullptr 
         && low != high && low != high->next) {
-      
-        // Find the partition node (pivot)
-        Node* pivot = partition(low, high);
+        // se define el primer valor de la lista como el pivote
+        // este valor se usará para ordenar dividir los elementos
+        int pivot = high->value;
 
-        // Recursively sort the left half
-        quickSort(low, pivot->prev);
+        // se crean tres pilas auxiliares, 
+        // para guardar los datos menores, mayores e iguales que el pivote
+        Stack* smallerStack = new Stack();
+        Stack* equalStack = new Stack();
+        Stack* biggerStack = new Stack();
 
-        // Recursively sort the right half
-        quickSort(pivot->next, high);
+        // se recorre la lista con un current (por ser iterativo)
+        Node* current = low;
+
+        // para recorrer la lista, mientras current sea dif de null
+        while (current != nullptr){
+            // si el valor es menor que el pivote a la smaller
+            // si no, si es mayor a la bigger stack
+            // sino a la equal stack
+            if (current->value < pivot){
+                smallerStack->push(current->value);
+            } else if((current->value > pivot)){
+                biggerStack->push(current->value);
+            } else {
+                equalStack->push(current->value);
+            }
+            // continua al siguiente nodo
+            current = current->next;
+        }
+
+        // se convierten las stacks a DLL's
+        DoublyLinkedList* smallerList = stackToDLL(smallerStack);
+        DoublyLinkedList* biggerList = stackToDLL(biggerStack);
+        DoublyLinkedList* equalList = stackToDLL(equalStack);
+
+        // se vuelven a ordenar las menores y mayores que el pivot
+        smallerList = quickSortStack(smallerList);
+        biggerList = quickSortStack(biggerList);
+
+        // se pegan las 3 listas
+
+        DoublyLinkedList* newList = joinDLL(smallerList,equalList,biggerList);
+
+        // devuelve la lista ordenada
+        return newList;
+
     }
+    else {
+        // devuelve la lista original porque estaba vacía, para no
+        // dejar comportamiento indefinido
+        return list;
+    }
+}
+
+int main(){
+    // se crea una mini DLL
+    DoublyLinkedList* list = new DoublyLinkedList();
+
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> dist(1, 1000);
+
+    for (int i = 0; i < 100; i++) {
+        list->insertLast(dist(gen));
+    }
+
+
+    list->printForward();
+    // list->printBackward();
+
+    cout << "-------Sorting-------" <<endl;
+    list = quickSortStack(list);
+    list->printForward();
 }
