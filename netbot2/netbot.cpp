@@ -1,6 +1,7 @@
 #include "netbot.h"
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 #include <string>
 using namespace std;
@@ -26,58 +27,73 @@ public:
 };
 
 
-// Stack implementation using linked list
-class Stack {
-    Node* top;
-    
-    // To Store current size of stack
-    int count;
-    
+// nodo auxiliar para la pila usada por quicksort
+class StackNode {
 public:
-    Stack() {
-        
-        // initially stack is empty
-        top = NULL;
-        count = 0;
+    // puntero al nodo de la lista que se quiere guardar
+    Node* data;
+    // apuntador al siguiente nodo de la pila
+    StackNode* next;
+
+    // constructor del nodo auxiliar
+    StackNode(Node* _data) : data(_data), next(nullptr) {}
+};
+
+// pila que guarda punteros a nodos de la lista doble
+class Stack {
+private:
+    // nodo que queda en la parte superior de la pila
+    StackNode* top;
+    // cantidad de elementos almacenados
+    int count;
+
+public:
+    // constructor de la pila
+    Stack() : top(nullptr), count(0) {}
+
+    // destructor de la pila
+    ~Stack() {
+        while (!isEmpty()) {
+            pop();
+        }
     }
 
-    // push operation
-    void push(LogEntry x) {
-        Node* temp = new Node(x);
+    // inserta un puntero a nodo en la pila
+    void push(Node* x) {
+        StackNode* temp = new StackNode(x);
         temp->next = top;
         top = temp;
-        
         count++;
     }
 
-    // pop operation
-    LogEntry pop() {
+    // elimina y devuelve el elemento superior
+    Node* pop() {
         if (isEmpty()) {
-            throw out_of_range("stack underflow");
+            return nullptr;
         }
-        Node* temp = top;
+
+        StackNode* temp = top;
         top = top->next;
-        LogEntry val = temp->value;
-        
-        count--;
+        Node* value = temp->data;
         delete temp;
-        return val;
+        count--;
+        return value;
     }
 
-    // peek operation
-    LogEntry peek() {
+    // devuelve el elemento superior sin eliminarlo
+    Node* peek() {
         if (isEmpty()) {
-            throw out_of_range("stack underflow");
+            return nullptr;
         }
-        return top->value;
+        return top->data;
     }
 
-    // check if stack is empty
+    // indica si la pila esta vacia
     bool isEmpty() {
-        return top == NULL;
+        return top == nullptr;
     }
 
-    // size of stack
+    // devuelve el tamaño actual de la pila
     int getSize() {
         return count;
     }
@@ -341,146 +357,121 @@ class DoublyLinkedList {
 
 
 
-// Function to partition the list and find pivot
+// intercambia solamente los valores entre dos nodos
+void swapValues(Node* a, Node* b) {
+    LogEntry temp = a->value;
+    a->value = b->value;
+    b->value = temp;
+}
+
+// particion estilo Lomuto para lista doblemente ligada
 Node* partition(Node* low, Node* high) {
-    // Set pivot to the high node
+    // se toma como pivote el ultimo nodo del rango actual
     LogEntry pivot = high->value;
 
-    // Pointer to place smaller elements
-    Node* i = low->prev;
+    // i marca la frontera entre:
+    // 1. los elementos que ya quedaron acomodados a la izquierda
+    // 2. los elementos que aun no se han acomodado
+    // empieza en nullptr porque todavia no se ha encontrado ningun valor
+    // menor o igual al pivote dentro del rango
+    Node* i = nullptr;
 
-    // Traverse the list to rearrange nodes
+    // j recorre todo el rango desde low hasta el nodo anterior a high
+    // cada vez que encuentra un elemento menor o igual al pivote:
+    // 1. avanza i a la siguiente posicion disponible de la parte izquierda
+    // 2. intercambia el valor de j con el de i
+    // asi, todos los menores o iguales al pivote van quedando al inicio
     for (Node* j = low; j != high; j = j->next) {
-        
-        // If current node's value is less than or 
-        // equal to the pivot
+        // si el valor actual es menor o igual al pivote, se manda a la izquierda
         if (j->value <= pivot) {
-            
-            // Move i forward and swap with j
-            i = (i == nullptr) ? low : i->next;
-            swap(i->value, j->value);
+            if (i == nullptr) {
+                // el primer elemento menor o igual al pivote debe quedar
+                // exactamente al inicio del rango
+                i = low;
+            } else {
+                // los siguientes menores o iguales se colocan despues del anterior
+                i = i->next;
+            }
+            swapValues(i, j);
         }
     }
 
-    // Move i to the correct pivot position
-    i = (i == nullptr) ? low : i->next;
-  
-    // Swap pivot with i's value
-    swap(i->value, high->value);
+    // al terminar el recorrido, i debe avanzar una posicion mas:
+    // ahi es donde debe colocarse el pivote para que:
+    // a la izquierda queden los menores o iguales
+    // y a la derecha queden los mayores
+    if (i == nullptr) {
+        // si nunca hubo elementos menores o iguales, el pivote va al inicio
+        i = low;
+    } else {
+        // si si hubo, el pivote va justo despues del ultimo acomodado
+        i = i->next;
+    }
 
+    // se coloca el pivote en su sitio correcto
+    // despues de este swap, i apunta a la posicion definitiva del pivote
+    swapValues(i, high);
     return i;
 }
 
-// funcion auxiliar para convertir pilas a DLL's
-DoublyLinkedList* stackToDLL(Stack* stack){
-    DoublyLinkedList* list = new DoublyLinkedList();
-    while(!stack->isEmpty()){
-        LogEntry value = stack->pop();
-        list->insertLast(value);
-    }
-    return list;
-}
+// quicksort completamente iterativo para la lista doble
+void quickSortIterative(DoublyLinkedList& list) {
+    // definir cabeza y cola de la lista completa
+    Node* low = list.getHead();
+    Node* high = list.getTail();
 
-DoublyLinkedList* joinDLL(DoublyLinkedList* list1, DoublyLinkedList* list2, DoublyLinkedList* list3) {
-    DoublyLinkedList* list = new DoublyLinkedList();
-    Node* current = nullptr;
-
-    // copy list1
-    if (list1 != nullptr) {
-        current = list1->getHead();
-        while (current != nullptr) {
-            list->insertLast(current->value);
-            current = current->next;
-        }
+    // no hace nada si la lista esta vacia o tiene un solo elemento
+    if (low == nullptr || high == nullptr || low == high) {
+        return;
     }
 
-    // copy list2
-    if (list2 != nullptr) {
-        current = list2->getHead();
-        while (current != nullptr) {
-            list->insertLast(current->value);
-            current = current->next;
-        }
-    }
+    // pila auxiliar donde se guardan pares de limites: izquierda y derecha
+    // cada par representa un subrango de la lista que aun falta ordenar
+    Stack pendingRanges;
+    pendingRanges.push(low);
+    pendingRanges.push(high);
 
-    // copy list3
-    if (list3 != nullptr) {
-        current = list3->getHead();
-        while (current != nullptr) {
-            list->insertLast(current->value);
-            current = current->next;
-        }
-    }
+    // se sigue procesando mientras existan rangos pendientes por ordenar
+    // esto reemplaza las llamadas recursivas de quicksort tradicional
+    while (!pendingRanges.isEmpty()) {
+        // primero sale el extremo derecho y despues el izquierdo
+        Node* right = pendingRanges.pop();
+        Node* left = pendingRanges.pop();
 
-    return list;
-}
-
-
-
-
-// Recursive function to apply quicksort
-DoublyLinkedList* quickSortStack(DoublyLinkedList* list) {
-  
-    // definir cabeza y cola de la lista
-    Node* low = list->getHead();
-    Node* high = list->getTail();
-    // solo ordenar si:
-    // la cabeza no es null, 
-    // la cola no es null, 
-    // cola y cabeza no son iguales 
-    // y cabeza es diferente del siguiente a la cola
-    if (low != nullptr && high != nullptr 
-        && low != high && low != high->next) {
-        // se define el primer valor de la lista como el pivote
-        // este valor se usará para ordenar dividir los elementos
-        LogEntry pivot = high->value;
-
-        // se crean tres pilas auxiliares, 
-        // para guardar los datos menores, mayores e iguales que el pivote
-        Stack* smallerStack = new Stack();
-        Stack* equalStack = new Stack();
-        Stack* biggerStack = new Stack();
-
-        // se recorre la lista con un current (por ser iterativo)
-        Node* current = low;
-
-        // para recorrer la lista, mientras current sea dif de null
-        while (current != nullptr){
-            // si el valor es menor que el pivote a la smaller
-            // si no, si es mayor a la bigger stack
-            // sino a la equal stack
-            if (current->value < pivot){
-                smallerStack->push(current->value);
-            } else if((current->value > pivot)){
-                biggerStack->push(current->value);
-            } else {
-                equalStack->push(current->value);
-            }
-            // continua al siguiente nodo
-            current = current->next;
+        // si el rango no es valido, se ignora
+        if (left == nullptr || right == nullptr) {
+            continue;
         }
 
-        // se convierten las stacks a DLL's
-        DoublyLinkedList* smallerList = stackToDLL(smallerStack);
-        DoublyLinkedList* biggerList = stackToDLL(biggerStack);
-        DoublyLinkedList* equalList = stackToDLL(equalStack);
+        // si el rango ya esta ordenado por tener un solo nodo, se salta
+        if (left == right) {
+            continue;
+        }
 
-        // se vuelven a ordenar las menores y mayores que el pivot
-        smallerList = quickSortStack(smallerList);
-        biggerList = quickSortStack(biggerList);
+        // este caso evita intentar ordenar un rango invertido
+        if (left == right->next) {
+            continue;
+        }
 
-        // se pegan las 3 listas
+        // se particiona el rango actual:
+        // 1. partition mueve menores o iguales a la izquierda
+        // 2. deja el pivote en su posicion final
+        // 3. regresa un apuntador a ese pivote ya acomodado
+        Node* pivot = partition(left, right);
 
-        DoublyLinkedList* newList = joinDLL(smallerList,equalList,biggerList);
+        // si hay elementos a la izquierda del pivote, se agrega ese subarreglo
+        // a la pila para ordenarlo despues
+        if (pivot->prev != nullptr && left != pivot) {
+            pendingRanges.push(left);
+            pendingRanges.push(pivot->prev);
+        }
 
-        // devuelve la lista ordenada
-        return newList;
-
-    }
-    else {
-        // devuelve la lista original porque estaba vacía, para no
-        // dejar comportamiento indefinido
-        return list;
+        // si hay elementos a la derecha del pivote, se agrega ese subarreglo
+        // a la pila para ordenarlo despues
+        if (pivot->next != nullptr && right != pivot) {
+            pendingRanges.push(pivot->next);
+            pendingRanges.push(right);
+        }
     }
 }
 //Convierte los strings de meses a int
@@ -592,6 +583,21 @@ void printIPRange(DoublyLinkedList* list, int initialIP, int finalIP) {
     }
 }
 
+// guarda en archivo los registros que caen dentro de un rango de ips
+void saveIPRangeToFile(DoublyLinkedList* list, int initialIP, int finalIP, const string& filename) {
+    ofstream file(filename);
+    Node* current = list->getHead();
+
+    while (current != nullptr) {
+        if (current->value.getIp() >= initialIP && current->value.getIp() <= finalIP) {
+            file << current->value << endl;
+        }
+        current = current->next;
+    }
+
+    file.close();
+}
+
 // guarda una lista en un archivo de texto
 void saveToFile(DoublyLinkedList* list, const string& filename) {
     ofstream file(filename);
@@ -603,6 +609,135 @@ void saveToFile(DoublyLinkedList* list, const string& filename) {
     }
 
     file.close();
+}
+
+// convierte una ip entera al formato con puntos para mostrar resultados
+string intToIpString(int ip) {
+    int ip1 = abs(ip / (256 * 256 * 256));
+    int ip2 = abs((ip / (256 * 256)) % 256);
+    int ip3 = abs((ip / 256) % 256);
+    int ip4 = abs(ip % 256);
+
+    return to_string(ip1) + "." + to_string(ip2) + "." +
+           to_string(ip3) + "." + to_string(ip4);
+}
+
+// cuenta cuantas ips unicas hay recorriendo la lista ya ordenada por ip
+int countUniqueIPs(DoublyLinkedList* list) {
+    Node* current = list->getHead();
+
+    if (current == nullptr) {
+        return 0;
+    }
+
+    int uniqueIPs = 0;
+
+    while (current != nullptr) {
+        int currentIP = current->value.getIp();
+        uniqueIPs++;
+
+        // avanza mientras sigan apareciendo registros de la misma ip
+        while (current != nullptr && current->value.getIp() == currentIP) {
+            current = current->next;
+        }
+    }
+
+    return uniqueIPs;
+}
+
+// calcula el promedio de intentos por ip
+double averageAttemptsPerIP(DoublyLinkedList* list) {
+    int uniqueIPs = countUniqueIPs(list);
+
+    if (uniqueIPs == 0) {
+        return 0.0;
+    }
+
+    return static_cast<double>(list->getSize()) / uniqueIPs;
+}
+
+// cuenta cuantas ips tienen mas de cierta cantidad de intentos
+int countIPsOverThreshold(DoublyLinkedList* list, int threshold) {
+    Node* current = list->getHead();
+    int total = 0;
+
+    while (current != nullptr) {
+        int currentIP = current->value.getIp();
+        int attempts = 0;
+
+        // cuenta cuantas veces aparece la misma ip de forma consecutiva
+        while (current != nullptr && current->value.getIp() == currentIP) {
+            attempts++;
+            current = current->next;
+        }
+
+        if (attempts > threshold) {
+            total++;
+        }
+    }
+
+    return total;
+}
+
+// imprime las top n ips con mas intentos
+void printTopNIPs(DoublyLinkedList* list, int n = 5) {
+    int topIPs[5] = {0, 0, 0, 0, 0};
+    int topCounts[5] = {0, 0, 0, 0, 0};
+    Node* current = list->getHead();
+
+    while (current != nullptr) {
+        int currentIP = current->value.getIp();
+        int attempts = 0;
+
+        // como la lista ya esta ordenada, todas las repeticiones quedan juntas
+        while (current != nullptr && current->value.getIp() == currentIP) {
+            attempts++;
+            current = current->next;
+        }
+
+        // inserta la ip en la posicion correcta del top si supera alguno actual
+        for (int i = 0; i < n; i++) {
+            if (attempts > topCounts[i]) {
+                for (int j = n - 1; j > i; j--) {
+                    topCounts[j] = topCounts[j - 1];
+                    topIPs[j] = topIPs[j - 1];
+                }
+                topCounts[i] = attempts;
+                topIPs[i] = currentIP;
+                break;
+            }
+        }
+    }
+
+    cout << "Top " << n << " IPs con mas intentos:" << endl;
+    for (int i = 0; i < n; i++) {
+        if (topCounts[i] > 0) {
+            cout << i + 1 << ". " << intToIpString(topIPs[i])
+                 << " con " << topCounts[i] << " intentos" << endl;
+        }
+    }
+}
+
+// imprime el reporte completo de heavy hitters
+void printHeavyHitterReport(DoublyLinkedList* list) {
+    int uniqueIPs = countUniqueIPs(list);
+    double average = averageAttemptsPerIP(list);
+    int over10 = countIPsOverThreshold(list, 10);
+    int over20 = countIPsOverThreshold(list, 20);
+
+    cout << endl;
+    cout << "========== REPORTE DE HEAVY HITTERS ==========" << endl;
+    cout << "Total de registros: " << list->getSize() << endl;
+    cout << "IPs unicas: " << uniqueIPs << endl;
+    cout << fixed << setprecision(2);
+    cout << "Promedio de intentos por IP: " << average << endl;
+    printTopNIPs(list, 5);
+    cout << "IPs con mas de 10 intentos: " << over10 << endl;
+    cout << "IPs con mas de 20 intentos: " << over20 << endl;
+    cout << "Diferencia con la fase 1: ahora una misma IP puede repetirse varias veces," << endl;
+    cout << "lo que permite detectar heavy hitters y priorizar las IPs mas agresivas." << endl;
+    cout << "==============================================" << endl;
+    cout << endl;
 }
 
 
@@ -625,9 +760,11 @@ int main(){
     // imprime la lista original en el orden en que fue leida
     // logsList.printForward();
 
-    // quickSortStack usa un puntero, por eso se pasa la direccion de la lista
-    // porque la funcion espera la ubicacion de la lista en memoria
-    DoublyLinkedList* sortedList = quickSortStack(&logsList);
+    // se ordena la misma lista con quicksort iterativo, como en la carpeta quicksort
+    quickSortIterative(logsList);
+
+    // genera el reporte de actividad por ip usando la lista ya ordenada
+    printHeavyHitterReport(&logsList);
 
     // solicita al usuario la ip inicial del rango
     cout << "Ingresa la IP inicial: ";
@@ -647,10 +784,17 @@ int main(){
     }
 
     // imprime los registros que estan dentro del rango dado
-    printIPRange(sortedList, initialIP, finalIP);
+    printIPRange(&logsList, initialIP, finalIP);
 
-    // guarda el resultado del ordenamiento en un archivo
-    saveToFile(sortedList, "resultado.txt");
+    // guarda toda la lista ordenada en un archivo
+    saveToFile(&logsList, "ordenado.txt");
+
+    // guarda los resultados de la busqueda por rango en otro archivo
+    saveIPRangeToFile(&logsList, initialIP, finalIP, "busqueda.txt");
+
+    cout << endl;
+    cout << "Se guardo la lista completa ordenada en ordenado.txt" << endl;
+    cout << "Se guardo la busqueda por rango en busqueda.txt" << endl;
 
     return 0;
 }
