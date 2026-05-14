@@ -544,7 +544,7 @@ void loadLogEntryData(const string& filename, DoublyLinkedList& list, int n = 50
             << "reason: " << reason << endl;
         }
         
-        int _ip = stoi(ip1) * 255 * 255 * 255 + stoi(ip2) * 255 * 255 + stoi(ip3) * 255 + stoi(ip4);
+        int _ip = stoi(ip1) * 256 * 256 * 256 + stoi(ip2) * 256 * 256 + stoi(ip3) * 256 + stoi(ip4);
         int _s = stoi(s);
         int _min = stoi(min);
         int _hr = stoi(hr);
@@ -568,7 +568,7 @@ int ipToInt(const string& ip) {
     getline(ss, ip3, '.');
     getline(ss, ip4, '.');
 
-    return stoi(ip1) * 255 * 255 * 255 + stoi(ip2) * 255 * 255 + stoi(ip3) * 255 + stoi(ip4);
+    return stoi(ip1) * 256 * 256 * 256 + stoi(ip2) * 256 * 256 + stoi(ip3) * 256 + stoi(ip4);
 }
 
 // imprime los registros dentro de un rango de ips
@@ -745,7 +745,7 @@ void printHeavyHitterReport(DoublyLinkedList* list) {
 
 int main(){
     // cantidad maxima de registros a cargar del archivo
-    const int n = 2846;
+    const int n = 10000;
     // ip inicial y final para buscar en la lista
     string initialIPString, finalIPString;
     int initialIP, finalIP;
