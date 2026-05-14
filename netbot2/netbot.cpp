@@ -1,7 +1,6 @@
 #include "netbot.h"
 #include <iostream>
 #include <fstream>
-#include <iomanip>
 #include <sstream>
 #include <string>
 using namespace std;
@@ -544,7 +543,10 @@ void loadLogEntryData(const string& filename, DoublyLinkedList& list, int n = 50
             << "reason: " << reason << endl;
         }
         
-        int _ip = stoi(ip1) * 256 * 256 * 256 + stoi(ip2) * 256 * 256 + stoi(ip3) * 256 + stoi(ip4);
+        unsigned long long _ip = stoull(ip1) * 256ULL * 256ULL * 256ULL
+            + stoull(ip2) * 256ULL * 256ULL
+            + stoull(ip3) * 256ULL
+            + stoull(ip4);
         int _s = stoi(s);
         int _min = stoi(min);
         int _hr = stoi(hr);
@@ -559,7 +561,7 @@ void loadLogEntryData(const string& filename, DoublyLinkedList& list, int n = 50
 }
 
 // convierte una ip en string a entero
-int ipToInt(const string& ip) {
+unsigned long long ipToInt(const string& ip) {
     stringstream ss(ip);
     string ip1, ip2, ip3, ip4;
 
@@ -568,11 +570,14 @@ int ipToInt(const string& ip) {
     getline(ss, ip3, '.');
     getline(ss, ip4, '.');
 
-    return stoi(ip1) * 256 * 256 * 256 + stoi(ip2) * 256 * 256 + stoi(ip3) * 256 + stoi(ip4);
+    return stoull(ip1) * 256ULL * 256ULL * 256ULL
+        + stoull(ip2) * 256ULL * 256ULL
+        + stoull(ip3) * 256ULL
+        + stoull(ip4);
 }
 
 // imprime los registros dentro de un rango de ips
-void printIPRange(DoublyLinkedList* list, int initialIP, int finalIP) {
+void printIPRange(DoublyLinkedList* list, unsigned long long initialIP, unsigned long long finalIP) {
     Node* current = list->getHead();
 
     while (current != nullptr) {
@@ -584,7 +589,7 @@ void printIPRange(DoublyLinkedList* list, int initialIP, int finalIP) {
 }
 
 // guarda en archivo los registros que caen dentro de un rango de ips
-void saveIPRangeToFile(DoublyLinkedList* list, int initialIP, int finalIP, const string& filename) {
+void saveIPRangeToFile(DoublyLinkedList* list, unsigned long long initialIP, unsigned long long finalIP, const string& filename) {
     ofstream file(filename);
     Node* current = list->getHead();
 
@@ -612,11 +617,11 @@ void saveToFile(DoublyLinkedList* list, const string& filename) {
 }
 
 // convierte una ip entera al formato con puntos para mostrar resultados
-string intToIpString(int ip) {
-    int ip1 = abs(ip / (256 * 256 * 256));
-    int ip2 = abs((ip / (256 * 256)) % 256);
-    int ip3 = abs((ip / 256) % 256);
-    int ip4 = abs(ip % 256);
+string intToIpString(unsigned long long ip) {
+    unsigned long long ip1 = ip / (256ULL * 256ULL * 256ULL);
+    unsigned long long ip2 = (ip / (256ULL * 256ULL)) % 256ULL;
+    unsigned long long ip3 = (ip / 256ULL) % 256ULL;
+    unsigned long long ip4 = ip % 256ULL;
 
     return to_string(ip1) + "." + to_string(ip2) + "." +
            to_string(ip3) + "." + to_string(ip4);
@@ -633,7 +638,7 @@ int countUniqueIPs(DoublyLinkedList* list) {
     int uniqueIPs = 0;
 
     while (current != nullptr) {
-        int currentIP = current->value.getIp();
+        unsigned long long currentIP = current->value.getIp();
         uniqueIPs++;
 
         // avanza mientras sigan apareciendo registros de la misma ip
@@ -662,7 +667,7 @@ int countIPsOverThreshold(DoublyLinkedList* list, int threshold) {
     int total = 0;
 
     while (current != nullptr) {
-        int currentIP = current->value.getIp();
+        unsigned long long currentIP = current->value.getIp();
         int attempts = 0;
 
         // cuenta cuantas veces aparece la misma ip de forma consecutiva
@@ -681,12 +686,12 @@ int countIPsOverThreshold(DoublyLinkedList* list, int threshold) {
 
 // imprime las top n ips con mas intentos
 void printTopNIPs(DoublyLinkedList* list, int n = 5) {
-    int topIPs[5] = {0, 0, 0, 0, 0};
+    unsigned long long topIPs[5] = {0, 0, 0, 0, 0};
     int topCounts[5] = {0, 0, 0, 0, 0};
     Node* current = list->getHead();
 
     while (current != nullptr) {
-        int currentIP = current->value.getIp();
+        unsigned long long currentIP = current->value.getIp();
         int attempts = 0;
 
         // como la lista ya esta ordenada, todas las repeticiones quedan juntas
@@ -721,16 +726,24 @@ void printTopNIPs(DoublyLinkedList* list, int n = 5) {
 // imprime el reporte completo de heavy hitters
 void printHeavyHitterReport(DoublyLinkedList* list) {
     int uniqueIPs = countUniqueIPs(list);
-    double average = averageAttemptsPerIP(list);
     int over10 = countIPsOverThreshold(list, 10);
     int over20 = countIPsOverThreshold(list, 20);
+    int averageTimes100 = 0;
+
+    if (uniqueIPs > 0) {
+        averageTimes100 = (list->getSize() * 100 + uniqueIPs / 2) / uniqueIPs;
+    }
 
     cout << endl;
     cout << "========== REPORTE DE HEAVY HITTERS ==========" << endl;
     cout << "Total de registros: " << list->getSize() << endl;
     cout << "IPs unicas: " << uniqueIPs << endl;
-    cout << fixed << setprecision(2);
-    cout << "Promedio de intentos por IP: " << average << endl;
+    cout << "Promedio de intentos por IP: "
+         << averageTimes100 / 100 << ".";
+    if (averageTimes100 % 100 < 10) {
+        cout << "0";
+    }
+    cout << averageTimes100 % 100 << endl;
     printTopNIPs(list, 5);
     cout << "IPs con mas de 10 intentos: " << over10 << endl;
     cout << "IPs con mas de 20 intentos: " << over20 << endl;
@@ -748,7 +761,7 @@ int main(){
     const int n = 10000;
     // ip inicial y final para buscar en la lista
     string initialIPString, finalIPString;
-    int initialIP, finalIP;
+    unsigned long long initialIP, finalIP;
 
     // lista doblemente ligada donde se guardaran los logs
     DoublyLinkedList logsList;

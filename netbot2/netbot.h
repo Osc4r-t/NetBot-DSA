@@ -4,7 +4,8 @@ using namespace std;
 class LogEntry {
 private:
     // Componentes de fecha y hora del registro.
-    int sec, min, hr, day, month, attacks, ip;
+    int sec, min, hr, day, month, attacks;
+    unsigned long long ip;
 
     // Datos asociados al evento.
     string reason;
@@ -22,7 +23,7 @@ public:
           reason("") {}
 
     // Constructor completo para crear una entrada con toda la informacion.
-    LogEntry(int _s, int _min, int _h, int _d, int _m, int _r, const string& _nm)
+    LogEntry(int _s, int _min, int _h, int _d, int _m, unsigned long long _r, const string& _nm)
        : sec(_s),
          min(_min),
          hr(_h),
@@ -39,7 +40,7 @@ public:
     int getMonth() const { return month; }
     int getAttacks() const { return attacks; }
     string getReason() const { return reason; }
-    int getIp() const { return ip; }
+    unsigned long long getIp() const { return ip; }
 
     // Compara dos registros en orden cronologico.
     // Regresa negativo si este registro va antes,
@@ -79,10 +80,10 @@ public:
     // Permite imprimir una entrada en el formato usado por el programa.
     friend ostream& operator<<(ostream& os, const LogEntry& log){
         string mes;
-        int ip1 = abs(log.getIp() / (256 * 256 * 256));
-        int ip2 = abs((log.getIp() / (256 * 256)) % 256);
-        int ip3 = abs((log.getIp() / 256) % 256);
-        int ip4 = abs(log.getIp() % 256);
+        unsigned long long ip1 = log.getIp() / (256ULL * 256ULL * 256ULL);
+        unsigned long long ip2 = (log.getIp() / (256ULL * 256ULL)) % 256ULL;
+        unsigned long long ip3 = (log.getIp() / 256ULL) % 256ULL;
+        unsigned long long ip4 = log.getIp() % 256ULL;
 
         if (log.getMonth() == 1) mes = "Jan";
         if (log.getMonth() == 2) mes = "Feb";
