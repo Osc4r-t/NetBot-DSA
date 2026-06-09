@@ -1,5 +1,9 @@
 # Actividad 5.2 - Tabla hash por dominio
 
+## Objetivo
+
+Construir una tabla hash propia para agrupar accesos por dominio o destino, consultar un dominio en tiempo O(1) promedio y responder las preguntas de la tarjeta de mision.
+
 ## Archivos
 
 - `bitacora.txt`: archivo base de accesos.
@@ -37,6 +41,8 @@ Cada llave guarda:
 - Numero de IPs origen unicas.
 - Lista de IPs origen que accedieron a ese dominio/destino.
 
+Al iniciar, el programa muestra estadisticas generales y el top 5 de destinos con mas accesos. Despues abre un menu interactivo para consultar dominios, ver rankings, mostrar la tabla completa, consultar estadisticas y desplegar las respuestas de la tarjeta de mision.
+
 ## Estructura usada
 
 Se implementa una tabla hash propia con:
@@ -47,6 +53,15 @@ Se implementa una tabla hash propia con:
 - Despliegue ordenado de la informacion con `displayDomain`.
 - Vista de preguntas de la tarjeta de mision desde el menu del programa.
 
+## Menu
+
+- `1`: consultar dominio/destino.
+- `2`: mostrar top dominios/destinos.
+- `3`: mostrar tabla hash completa.
+- `4`: mostrar estadisticas.
+- `5`: ver preguntas de la tarjeta de mision.
+- `0`: salir.
+
 ## Complejidad
 
 - Lectura del archivo: O(r), donde r es el numero de registros.
@@ -54,6 +69,10 @@ Se implementa una tabla hash propia con:
 - Consulta por dominio: O(1) promedio, O(n) peor caso.
 - Impresion de IPs de un dominio: O(u log u), donde u es el numero de IPs unicas.
 - Top dominios: O(n log n), donde n es el numero de dominios/destinos unicos.
+
+## Datos requeridos
+
+Debe existir `bitacora.txt` en la carpeta `netbot5`.
 
 ## Puntos para la reflexion individual
 
